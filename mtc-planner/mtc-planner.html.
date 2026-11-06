@@ -1,0 +1,1125 @@
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MTC — Martian Time Calendar</title>
+<style>
+:root {
+  --bg:#fff;
+  --card:#fff;
+  --soft:#f7f8fa;
+  --yellow:#f5cc49;
+  --pale:#fff6d7;
+  --gray:#e4e7ed;
+  --text:#303746;
+  --muted:#8993a3;
+  --blue:#526b8d;
+  --red:#c65e65;
+}
+* {box-sizing:border-box}
+body {
+  margin:0;
+  padding:20px 12px;
+  background:var(--bg);
+  color:var(--text);
+  font:14px Arial,sans-serif;
+}
+.container {max-width:1050px;margin:auto}
+header {text-align:center;padding:20px 0 26px}
+h1 {font-size:36px;letter-spacing:8px;margin:0}
+.subtitle {
+  color:var(--muted);
+  letter-spacing:3px;
+  font-size:10px;
+  margin-top:9px;
+}
+.tabs {
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:7px;
+  margin-bottom:22px;
+}
+button,input,select,textarea {font:inherit}
+button {cursor:pointer}
+.tab,.nav,.primary,.danger {
+  padding:10px 14px;
+  border:1px solid var(--gray);
+  border-radius:9px;
+  background:var(--soft);
+  color:var(--text);
+}
+.tab.active,.primary {
+  background:var(--yellow);
+  border-color:var(--yellow);
+  font-weight:bold;
+}
+.danger {color:var(--red);background:white}
+.small {padding:7px 10px;font-size:12px}
+.panel {
+  background:var(--card);
+  border:1px solid var(--gray);
+  border-radius:15px;
+  padding:22px;
+  margin-bottom:18px;
+}
+.label {
+  color:var(--muted);
+  font-size:11px;
+  letter-spacing:2px;
+  margin-bottom:18px;
+}
+.heading {font-size:22px;font-weight:bold}
+.muted {
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.6;
+}
+.page {display:none}
+.page.active {display:block}
+.control {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:14px 0;
+}
+.year,.month-name {font-size:21px;font-weight:bold}
+input,select,textarea {
+  width:100%;
+  padding:11px;
+  border:1px solid #dce0e7;
+  border-radius:8px;
+  color:var(--text);
+  background:white;
+  outline-color:var(--yellow);
+}
+.month-select {margin:12px 0 18px}
+.calendar {
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:5px;
+  max-width:560px;
+  margin:auto;
+}
+.weekday {
+  text-align:center;
+  padding:8px 0;
+  font-size:10px;
+  color:var(--muted);
+}
+.day {
+  position:relative;
+  height:39px;
+  border:1px solid #edf0f3;
+  border-radius:7px;
+  background:#fafbfc;
+  color:var(--text);
+  font-size:12px;
+}
+.day:hover {background:var(--pale)}
+.day.selected {
+  background:var(--yellow);
+  border-color:#e4b932;
+  font-weight:bold;
+}
+.day.has-data:after {
+  content:"";
+  position:absolute;
+  bottom:3px;
+  left:calc(50% - 2px);
+  width:4px;
+  height:4px;
+  border-radius:50%;
+  background:var(--blue);
+}
+.empty-day {visibility:hidden}
+.form {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin:20px 0;
+}
+.field {
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  min-width:0;
+}
+.field label {font-size:12px;color:var(--muted)}
+.wide {grid-column:1/-1}
+.item {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:13px;
+  margin:9px 0;
+  background:#fafbfc;
+  border:1px solid var(--gray);
+  border-radius:10px;
+}
+.item-body {flex:1;min-width:0;overflow-wrap:anywhere}
+.item-title {font-weight:bold}
+.item-meta {
+  color:var(--blue);
+  font-size:12px;
+  margin-top:6px;
+}
+.item.done .item-title {
+  text-decoration:line-through;
+  color:var(--muted);
+}
+.check {
+  width:18px;
+  height:18px;
+  accent-color:#e4b52d;
+  flex-shrink:0;
+}
+.progress {
+  background:#edf0f3;
+  height:7px;
+  border-radius:10px;
+  overflow:hidden;
+  margin:12px 0;
+}
+.fill {
+  height:100%;
+  width:0;
+  background:var(--yellow);
+  transition:width .2s;
+}
+.notes {min-height:100px;resize:vertical}
+.empty-text {
+  padding:20px;
+  text-align:center;
+  color:var(--muted);
+  background:var(--soft);
+  border-radius:10px;
+}
+.week-scroll {overflow-x:auto}
+.week-grid {
+  display:grid;
+  grid-template-columns:repeat(7,minmax(105px,1fr));
+  gap:7px;
+  min-width:735px;
+}
+.week-column {
+  background:var(--soft);
+  border:1px solid var(--gray);
+  border-radius:10px;
+  padding:8px;
+  min-height:150px;
+}
+.week-title {
+  text-align:center;
+  font-weight:bold;
+  padding:9px 0;
+  border-bottom:1px solid var(--gray);
+  margin-bottom:9px;
+}
+.lesson {
+  background:white;
+  border-left:3px solid var(--yellow);
+  padding:9px;
+  margin-bottom:8px;
+  border-radius:6px;
+  overflow-wrap:anywhere;
+}
+.lesson-time {
+  color:var(--blue);
+  font-size:11px;
+  margin-bottom:6px;
+}
+.lesson button {margin-top:7px}
+.jar-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+  gap:15px;
+}
+.jar-card {
+  background:var(--soft);
+  border:1px solid var(--gray);
+  border-radius:14px;
+  padding:18px;
+  text-align:center;
+}
+.jar-name {
+  font-weight:bold;
+  font-size:16px;
+  margin-bottom:15px;
+  overflow-wrap:anywhere;
+}
+.jar-art {
+  position:relative;
+  width:112px;
+  height:142px;
+  margin:12px auto;
+  border:4px solid #9da7b5;
+  border-top:9px solid #9da7b5;
+  border-radius:10px 10px 22px 22px;
+  overflow:hidden;
+  background:white;
+}
+.jar-liquid {
+  position:absolute;
+  bottom:0;
+  left:0;
+  width:100%;
+  height:0;
+  transition:height .4s;
+}
+.jar-percent {
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+  font-weight:bold;
+  color:#303746;
+  text-shadow:0 1px 3px white;
+}
+.jar-actions {
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-top:13px;
+}
+.footer {
+  text-align:center;
+  color:var(--muted);
+  font-size:10px;
+  letter-spacing:2px;
+  padding:25px;
+}
+@media(max-width:550px) {
+  body {padding:10px 8px}
+  .panel {padding:13px}
+  .calendar {gap:3px}
+  .day {height:34px;font-size:11px}
+  .weekday {font-size:9px}
+  .tab {padding:9px;font-size:12px}
+  .form {gap:9px}
+  .year,.month-name {font-size:19px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>MTC</h1>
+  <div class="subtitle">MARTIAN TIME CALENDAR</div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-page="calendarPage">Календар</button>
+  <button class="tab" data-page="goalsPage">Цілі</button>
+  <button class="tab" data-page="meetingsPage">Зустрічі</button>
+  <button class="tab" data-page="weekPage">Розклад</button>
+  <button class="tab" data-page="jarsPage">Банки цілей</button>
+</nav>
+
+<!-- КАЛЕНДАР -->
+<section class="page active" id="calendarPage">
+ <div class="panel">
+  <div class="label">MARTIAN CALENDAR · 687 SOLS</div>
+
+  <div class="control">
+   <button class="nav" id="prevYear">←</button>
+   <div class="year" id="yearDisplay"></div>
+   <button class="nav" id="nextYear">→</button>
+  </div>
+
+  <div class="control">
+   <button class="nav" id="prevMonth">←</button>
+   <div class="month-name" id="monthDisplay"></div>
+   <button class="nav" id="nextMonth">→</button>
+  </div>
+
+  <select id="monthSelect" class="month-select"></select>
+  <div class="calendar" id="calendar"></div>
+  <p class="muted">Натисни на соль, щоб відкрити план дня.</p>
+ </div>
+
+ <div class="panel">
+  <div class="label">DAILY PLANNER</div>
+  <div class="heading" id="dateHeading"></div>
+  <p class="muted" id="dateSub"></p>
+  <div class="muted" id="progressText"></div>
+  <div class="progress"><div class="fill" id="progressFill"></div></div>
+
+  <div class="label" style="margin-top:25px">НОВЕ ЗАВДАННЯ</div>
+  <div class="form">
+   <div class="field wide">
+    <label>Назва завдання</label>
+    <input id="taskTitle" placeholder="Наприклад: Англійська">
+   </div>
+   <div class="field">
+    <label>Початок</label>
+    <input type="time" id="taskStart" value="10:00">
+   </div>
+   <div class="field">
+    <label>Завершення</label>
+    <input type="time" id="taskEnd" value="11:30">
+   </div>
+   <button class="primary wide" id="addTask">+ Додати завдання</button>
+  </div>
+
+  <div id="taskList"></div>
+  <div class="label" style="margin-top:25px">НОТАТКИ</div>
+  <textarea id="notes" class="notes" placeholder="Ідеї, думки, нагадування..."></textarea>
+ </div>
+</section>
+
+<!-- ЦІЛІ -->
+<section class="page" id="goalsPage">
+ <div class="panel">
+  <div class="label">GOAL PLANNER</div>
+  <div class="heading">Мої цілі</div>
+  <p class="muted">Планування на тиждень, місяць або рік.</p>
+
+  <div class="form">
+   <div class="field wide">
+    <label>Назва цілі</label>
+    <input id="goalTitle" placeholder="Наприклад: Завершити проєкт">
+   </div>
+   <div class="field">
+    <label>Період</label>
+    <select id="goalPeriod">
+     <option value="week">Тиждень</option>
+     <option value="month">Місяць</option>
+     <option value="year">Рік</option>
+    </select>
+   </div>
+   <div class="field">
+    <label>Банка для цієї цілі</label>
+    <select id="goalJar"></select>
+   </div>
+   <button class="primary wide" id="addGoal">+ Створити ціль</button>
+  </div>
+
+  <div id="goalList"></div>
+ </div>
+</section>
+
+<!-- ЗУСТРІЧІ -->
+<section class="page" id="meetingsPage">
+ <div class="panel">
+  <div class="label">MEETING PLANNER</div>
+  <div class="heading">Зустрічі та події</div>
+
+  <div class="form">
+   <div class="field wide">
+    <label>Назва зустрічі</label>
+    <input id="meetingTitle" placeholder="Назва події">
+   </div>
+   <div class="field">
+    <label>Марсіанська дата</label>
+    <input id="meetingDate" readonly>
+   </div>
+   <div class="field">
+    <label>Час</label>
+    <input type="time" id="meetingTime" value="12:00">
+   </div>
+   <button class="primary wide" id="addMeeting">+ Додати зустріч</button>
+  </div>
+
+  <div id="meetingList"></div>
+ </div>
+</section>
+
+<!-- РОЗКЛАД -->
+<section class="page" id="weekPage">
+ <div class="panel">
+  <div class="label">WEEKLY SCHEDULE</div>
+  <div class="heading">Розклад на тиждень</div>
+  <p class="muted">Постійний розклад, який повторюється кожного тижня.</p>
+
+  <div class="form">
+   <div class="field wide">
+    <label>Назва заняття</label>
+    <input id="lessonTitle" placeholder="Наприклад: Математика">
+   </div>
+   <div class="field wide">
+    <label>День тижня</label>
+    <select id="lessonDay"></select>
+   </div>
+   <div class="field">
+    <label>Початок</label>
+    <input type="time" id="lessonStart" value="09:00">
+   </div>
+   <div class="field">
+    <label>Завершення</label>
+    <input type="time" id="lessonEnd" value="10:00">
+   </div>
+   <button class="primary wide" id="addLesson">+ Додати заняття</button>
+  </div>
+ </div>
+
+ <div class="panel">
+  <div class="week-scroll">
+   <div class="week-grid" id="weekGrid"></div>
+  </div>
+ </div>
+</section>
+
+<!-- БАНКИ -->
+<section class="page" id="jarsPage">
+ <div class="panel">
+  <div class="label">GOAL JARS</div>
+  <div class="heading">Мої банки цілей</div>
+  <p class="muted">Кожна виконана прив'язана ціль наповнює вибрану банку.</p>
+
+  <div class="form">
+   <div class="field wide">
+    <label>Назва банки</label>
+    <input id="jarName" placeholder="Наприклад: Мій розвиток">
+   </div>
+   <div class="field">
+    <label>Скільки цілей потрібно виконати?</label>
+    <input type="number" id="jarTarget" min="1" value="10">
+   </div>
+   <div class="field">
+    <label>Колір наповнення</label>
+    <input type="color" id="jarColor" value="#f5cc49">
+   </div>
+   <button class="primary wide" id="addJar">+ Створити банку</button>
+  </div>
+ </div>
+
+ <div class="jar-grid" id="jarGrid"></div>
+</section>
+
+<div class="footer">MTC SYSTEM · 687 SOLS</div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const months = [
+ ["Арен",30],["Велен",30],["Сорен",30],
+ ["Ларен",30],["Марен",30],["Тарен",30],
+ ["Норен",30],["Елен",30],["Корен",30],
+ ["Дарен",30],["Равен",30],["Мірен",30],
+ ["Солен",30],["Варен",30],["Ренен",30],
+ ["Кален",30],["Орлен",30],["Савен",30],
+ ["Терен",30],["Лорен",30],
+ ["Навен",29],["Зарен",29],["Фарен",29]
+];
+
+const weekdays = [
+ "Аурі","Солір","Вері","Нарі","Тері","Елі","Зарі"
+];
+
+const KEY = "MTC_COMPLETE_V6";
+const PREVIOUS_KEY = "MTC_CUSTOM_PLANNER_V5";
+const OLD_KEY = "MTC_CALENDAR_DATA_V3";
+
+let year=39,month=1,day=8;
+
+let state = {
+ days:{},
+ goals:[],
+ meetings:[],
+ lessons:[],
+ jars:[]
+};
+
+function uid() {
+ return "id_"+Date.now()+"_"+Math.random().toString(36).slice(2);
+}
+
+function load() {
+ try {
+  const saved=JSON.parse(localStorage.getItem(KEY));
+  if(saved) {
+   state={...state,...saved};
+   return;
+  }
+
+  const previous=JSON.parse(localStorage.getItem(PREVIOUS_KEY));
+  if(previous) {
+   state.days=previous.days||{};
+   state.goals=previous.goals||[];
+   state.meetings=previous.meetings||[];
+  } else {
+   const old=JSON.parse(localStorage.getItem(OLD_KEY)||"{}");
+   for(const [key,value] of Object.entries(old)) {
+    const tasks=Object.entries(value.tasks||{})
+     .filter(([,v])=>String(v).trim())
+     .map(([i,v])=>{
+      const start=(5+Number(i))%24;
+      const end=(start+1)%24;
+      const fmt=n=>String(n).padStart(2,"0")+":00";
+      return {
+       id:uid(),title:String(v),
+       start:fmt(start),end:fmt(end),
+       done:!!(value.completed||{})[i]
+      };
+     });
+    if(tasks.length||value.notes)
+     state.days[key]={tasks,notes:value.notes||""};
+   }
+  }
+  save();
+ } catch(e) {
+  console.error("Помилка завантаження",e);
+ }
+}
+
+function save() {
+ try {
+  localStorage.setItem(KEY,JSON.stringify(state));
+ } catch(e) {
+  alert("Не вдалося зберегти дані.");
+ }
+}
+
+function dateKey() {
+ return `MY${year}-M${month+1}-D${day}`;
+}
+
+function dateText() {
+ return `${day} ${months[month][0]} · MY ${year}`;
+}
+
+function dayRecord() {
+ if(!state.days[dateKey()])
+  state.days[dateKey()]={tasks:[],notes:""};
+ return state.days[dateKey()];
+}
+
+function yearDay(m,d) {
+ return months.slice(0,m).reduce((sum,x)=>sum+x[1],d);
+}
+
+function weekday(m,d) {
+ return (((year-39)*687+yearDay(m,d)-1)%7+7)%7;
+}
+
+function changeMonth(n) {
+ month+=n;
+ if(month>22){month=0;year++;}
+ if(month<0){month=22;year--;}
+ day=Math.min(day,months[month][1]);
+ renderAll();
+}
+
+function changeYear(n) {
+ year+=n;
+ renderAll();
+}
+
+function renderCalendar() {
+ $("yearDisplay").textContent="MY "+year;
+ $("monthDisplay").textContent=months[month][0];
+ $("monthSelect").value=month;
+
+ const grid=$("calendar");
+ grid.replaceChildren();
+
+ weekdays.forEach(name=>{
+  const el=document.createElement("div");
+  el.className="weekday";
+  el.textContent=name;
+  grid.append(el);
+ });
+
+ const offset=weekday(month,1);
+ for(let i=0;i<offset;i++) {
+  const el=document.createElement("div");
+  el.className="empty-day";
+  grid.append(el);
+ }
+
+ for(let d=1;d<=months[month][1];d++) {
+  const el=document.createElement("button");
+  el.type="button";
+  el.className="day"+(day===d?" selected":"");
+  el.textContent=d;
+
+  const k=`MY${year}-M${month+1}-D${d}`;
+  const record=state.days[k];
+
+  if(record&&((record.tasks||[]).length||record.notes))
+   el.classList.add("has-data");
+
+  el.onclick=()=>{
+   day=d;
+   renderAll();
+  };
+  grid.append(el);
+ }
+}
+
+function makeItem(title,meta,done,onCheck,onDelete) {
+ const el=document.createElement("div");
+ el.className="item"+(done?" done":"");
+
+ const check=document.createElement("input");
+ check.type="checkbox";
+ check.className="check";
+ check.checked=!!done;
+ check.onchange=()=>onCheck(check.checked);
+
+ const body=document.createElement("div");
+ body.className="item-body";
+
+ const name=document.createElement("div");
+ name.className="item-title";
+ name.textContent=title;
+
+ const info=document.createElement("div");
+ info.className="item-meta";
+ info.textContent=meta;
+
+ body.append(name,info);
+
+ const remove=document.createElement("button");
+ remove.className="danger small";
+ remove.textContent="×";
+ remove.title="Видалити";
+ remove.onclick=onDelete;
+
+ el.append(check,body,remove);
+ return el;
+}
+
+function emptyMessage(container,message) {
+ const el=document.createElement("div");
+ el.className="empty-text";
+ el.textContent=message;
+ container.append(el);
+}
+
+function renderTasks() {
+ $("dateHeading").textContent=dateText();
+ $("dateSub").textContent=
+  "День тижня: "+weekdays[weekday(month,day)];
+
+ const record=dayRecord();
+ record.tasks||=[];
+ $("notes").value=record.notes||"";
+
+ const list=$("taskList");
+ list.replaceChildren();
+
+ const tasks=[...record.tasks].sort(
+  (a,b)=>a.start.localeCompare(b.start)
+ );
+
+ tasks.forEach(t=>{
+  list.append(makeItem(
+   t.title,
+   t.start+" – "+t.end,
+   t.done,
+   value=>{
+    t.done=value;
+    save();
+    renderTasks();
+   },
+   ()=>{
+    record.tasks=record.tasks.filter(x=>x.id!==t.id);
+    save();
+    renderAll();
+   }
+  ));
+ });
+
+ if(!tasks.length)
+  emptyMessage(list,"Поки немає завдань на цей соль.");
+
+ const done=tasks.filter(t=>t.done).length;
+ $("progressText").textContent=`Виконано: ${done} / ${tasks.length}`;
+ $("progressFill").style.width=
+  (tasks.length?done/tasks.length*100:0)+"%";
+
+ $("meetingDate").value=dateText();
+}
+
+function addTask() {
+ const title=$("taskTitle").value.trim();
+ const start=$("taskStart").value;
+ const end=$("taskEnd").value;
+
+ if(!title||!start||!end)
+  return alert("Заповни назву та час.");
+
+ if(start===end)
+  return alert("Початок і завершення мають відрізнятися.");
+
+ dayRecord().tasks.push({
+  id:uid(),title,start,end,done:false
+ });
+
+ $("taskTitle").value="";
+ save();
+ renderAll();
+}
+
+function renderGoalJarSelect() {
+ const select=$("goalJar");
+ const selected=select.value;
+ select.replaceChildren();
+
+ const none=document.createElement("option");
+ none.value="";
+ none.textContent="Без банки";
+ select.append(none);
+
+ state.jars.forEach(j=>{
+  const opt=document.createElement("option");
+  opt.value=j.id;
+  opt.textContent=j.name;
+  select.append(opt);
+ });
+
+ select.value=state.jars.some(j=>j.id===selected)?selected:"";
+}
+
+function renderGoals() {
+ const list=$("goalList");
+ list.replaceChildren();
+
+ const names={
+  week:"Тиждень",
+  month:"Місяць",
+  year:"Рік"
+ };
+
+ state.goals.forEach(g=>{
+  const jar=state.jars.find(j=>j.id===g.jarId);
+  const meta=(names[g.period]||g.period)+" · "+
+   (g.date||"")+(jar?" · Банка: "+jar.name:"");
+
+  list.append(makeItem(
+   g.title,meta,g.done,
+   value=>{
+    g.done=value;
+    save();
+    renderGoals();
+    renderJars();
+   },
+   ()=>{
+    state.goals=state.goals.filter(x=>x.id!==g.id);
+    save();
+    renderGoals();
+    renderJars();
+   }
+  ));
+ });
+
+ if(!state.goals.length)
+  emptyMessage(list,"Тут будуть твої цілі.");
+}
+
+function addGoal() {
+ const title=$("goalTitle").value.trim();
+ if(!title)return alert("Введи назву цілі.");
+
+ state.goals.push({
+  id:uid(),
+  title,
+  period:$("goalPeriod").value,
+  date:dateText(),
+  jarId:$("goalJar").value,
+  done:false
+ });
+
+ $("goalTitle").value="";
+ save();
+ renderAll();
+}
+
+function renderMeetings() {
+ const list=$("meetingList");
+ list.replaceChildren();
+
+ state.meetings.forEach(m=>{
+  list.append(makeItem(
+   m.title,m.date+" · "+m.time,m.done,
+   value=>{
+    m.done=value;
+    save();
+    renderMeetings();
+   },
+   ()=>{
+    state.meetings=state.meetings.filter(x=>x.id!==m.id);
+    save();
+    renderMeetings();
+   }
+  ));
+ });
+
+ if(!state.meetings.length)
+  emptyMessage(list,"Поки немає зустрічей.");
+}
+
+function addMeeting() {
+ const title=$("meetingTitle").value.trim();
+ if(!title)return alert("Введи назву зустрічі.");
+
+ state.meetings.push({
+  id:uid(),
+  title,
+  date:dateText(),
+  time:$("meetingTime").value,
+  done:false
+ });
+
+ $("meetingTitle").value="";
+ save();
+ renderMeetings();
+}
+
+function renderWeek() {
+ const grid=$("weekGrid");
+ grid.replaceChildren();
+
+ weekdays.forEach((name,index)=>{
+  const col=document.createElement("div");
+  col.className="week-column";
+
+  const heading=document.createElement("div");
+  heading.className="week-title";
+  heading.textContent=name;
+  col.append(heading);
+
+  const lessons=state.lessons
+   .filter(l=>Number(l.day)===index)
+   .sort((a,b)=>a.start.localeCompare(b.start));
+
+  lessons.forEach(l=>{
+   const card=document.createElement("div");
+   card.className="lesson";
+
+   const time=document.createElement("div");
+   time.className="lesson-time";
+   time.textContent=l.start+" – "+l.end;
+
+   const title=document.createElement("div");
+   title.textContent=l.title;
+
+   const remove=document.createElement("button");
+   remove.className="danger small";
+   remove.textContent="Видалити";
+   remove.onclick=()=>{
+    state.lessons=state.lessons.filter(x=>x.id!==l.id);
+    save();
+    renderWeek();
+   };
+
+   card.append(time,title,remove);
+   col.append(card);
+  });
+
+  grid.append(col);
+ });
+}
+
+function addLesson() {
+ const title=$("lessonTitle").value.trim();
+ const start=$("lessonStart").value;
+ const end=$("lessonEnd").value;
+
+ if(!title||!start||!end)
+  return alert("Заповни всі поля.");
+
+ if(start===end)
+  return alert("Час початку і завершення має відрізнятися.");
+
+ state.lessons.push({
+  id:uid(),
+  title,
+  day:Number($("lessonDay").value),
+  start,end
+ });
+
+ $("lessonTitle").value="";
+ save();
+ renderWeek();
+}
+
+function addJar() {
+ const name=$("jarName").value.trim();
+ const target=Number($("jarTarget").value);
+ const color=$("jarColor").value;
+
+ if(!name)return alert("Введи назву банки.");
+ if(!Number.isInteger(target)||target<1)
+  return alert("Вкажи кількість цілей від 1.");
+
+ state.jars.push({
+  id:uid(),name,target,color
+ });
+
+ $("jarName").value="";
+ save();
+ renderAll();
+}
+
+function deleteJar(id) {
+ state.jars=state.jars.filter(j=>j.id!==id);
+
+ // Цілі не видаляються разом із банкою.
+ state.goals.forEach(g=>{
+  if(g.jarId===id)g.jarId="";
+ });
+
+ save();
+ renderAll();
+}
+
+function renderJars() {
+ const grid=$("jarGrid");
+ grid.replaceChildren();
+
+ if(!state.jars.length) {
+  emptyMessage(grid,"Створи свою першу банку.");
+  return;
+ }
+
+ state.jars.forEach(jar=>{
+  const count=state.goals.filter(
+   g=>g.jarId===jar.id&&g.done
+  ).length;
+
+  const percent=Math.min(
+   100,Math.round(count/jar.target*100)
+  );
+
+  const card=document.createElement("div");
+  card.className="jar-card";
+
+  const title=document.createElement("div");
+  title.className="jar-name";
+  title.textContent=jar.name;
+
+  const art=document.createElement("div");
+  art.className="jar-art";
+
+  const liquid=document.createElement("div");
+  liquid.className="jar-liquid";
+  liquid.style.height=percent+"%";
+  liquid.style.background=jar.color;
+
+  const pct=document.createElement("div");
+  pct.className="jar-percent";
+  pct.textContent=percent+"%";
+
+  art.append(liquid,pct);
+
+  const info=document.createElement("div");
+  info.className="muted";
+  info.textContent=`${count} виконано / ${jar.target} цілей`;
+
+  const actions=document.createElement("div");
+  actions.className="jar-actions";
+
+  const remove=document.createElement("button");
+  remove.className="danger small";
+  remove.textContent="Видалити банку";
+
+  const cancel=document.createElement("button");
+  cancel.className="nav small";
+  cancel.textContent="Скасувати";
+  cancel.hidden=true;
+
+  remove.onclick=()=>{
+   if(remove.dataset.confirm==="yes") {
+    deleteJar(jar.id);
+   } else {
+    remove.dataset.confirm="yes";
+    remove.textContent="Підтвердити видалення";
+    cancel.hidden=false;
+   }
+  };
+
+  cancel.onclick=()=>{
+   remove.dataset.confirm="";
+   remove.textContent="Видалити банку";
+   cancel.hidden=true;
+  };
+
+  actions.append(remove,cancel);
+  card.append(title,art,info,actions);
+  grid.append(card);
+ });
+}
+
+function renderAll() {
+ renderCalendar();
+ renderTasks();
+ renderGoalJarSelect();
+ renderGoals();
+ renderMeetings();
+ renderWeek();
+ renderJars();
+}
+
+// Заповнення списку місяців
+months.forEach(([name,length],i)=>{
+ const option=document.createElement("option");
+ option.value=i;
+ option.textContent=`${i+1}. ${name} · ${length} солів`;
+ $("monthSelect").append(option);
+});
+
+// Заповнення днів розкладу
+weekdays.forEach((name,i)=>{
+ const option=document.createElement("option");
+ option.value=i;
+ option.textContent=name;
+ $("lessonDay").append(option);
+});
+
+// Навігація
+$("prevYear").onclick=()=>changeYear(-1);
+$("nextYear").onclick=()=>changeYear(1);
+$("prevMonth").onclick=()=>changeMonth(-1);
+$("nextMonth").onclick=()=>changeMonth(1);
+
+$("monthSelect").onchange=e=>{
+ month=Number(e.target.value);
+ day=Math.min(day,months[month][1]);
+ renderAll();
+};
+
+// Кнопки створення
+$("addTask").onclick=addTask;
+$("addGoal").onclick=addGoal;
+$("addMeeting").onclick=addMeeting;
+$("addLesson").onclick=addLesson;
+$("addJar").onclick=addJar;
+
+// Автоматичне збереження нотаток
+$("notes").oninput=e=>{
+ dayRecord().notes=e.target.value;
+ save();
+};
+
+// Перемикання вкладок
+document.querySelectorAll(".tab").forEach(button=>{
+ button.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(
+   el=>el.classList.remove("active")
+  );
+  document.querySelectorAll(".page").forEach(
+   el=>el.classList.remove("active")
+  );
+
+  button.classList.add("active");
+  $(button.dataset.page).classList.add("active");
+ };
+});
+
+// Запуск календаря
+load();
+renderAll();
+</script>
+</body>
+</html>
