@@ -1,2 +1,0 @@
-# MTC
-project MTC-Calendar
