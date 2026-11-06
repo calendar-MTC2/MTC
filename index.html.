@@ -1,0 +1,1120 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MTC — Martian Time Calendar</title>
+<style>
+:root{
+  --yellow:#f5cc49;
+  --pale:#fff8df;
+  --text:#303746;
+  --muted:#8993a3;
+  --line:#e4e7ed;
+  --blue:#526b8d;
+  --soft:#f7f8fa;
+}
+*{box-sizing:border-box}
+body{margin:0;background:white;color:var(--text);font:14px Arial,sans-serif}
+.app{max-width:1120px;margin:auto;padding:20px 12px}
+header{text-align:center;padding:18px 0 28px}
+h1{margin:0;font-size:38px;letter-spacing:8px}
+.subtitle{font-size:10px;letter-spacing:3px;color:var(--muted);margin-top:8px}
+.tabs{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin-bottom:22px}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--soft);color:var(--text);border-radius:8px;padding:10px 13px}
+button:hover{background:var(--pale)}
+.tab.active,.primary{background:var(--yellow);border-color:var(--yellow);font-weight:bold}
+.danger{color:#bf535b;background:white}
+.panel{border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:17px}
+.page{display:none}
+.page.active{display:block}
+.label{font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:14px}
+h2{font-size:22px;margin:0 0 12px}
+h3{font-size:16px;margin:0 0 12px}
+.muted{color:var(--muted);font-size:12px;line-height:1.6}
+.controls{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:16px 0}
+.controls strong{font-size:21px}
+.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label{font-size:12px;color:var(--muted)}
+.wide{grid-column:1/-1}
+input,select,textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:8px;background:white;color:var(--text)}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--yellow)}
+input[type=color]{height:43px;padding:3px}
+textarea{min-height:90px;resize:vertical}
+.item{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:9px;margin:8px 0;background:#fafbfc}
+.item-body{flex:1;min-width:0;overflow-wrap:anywhere}
+.item-title{font-weight:bold}
+.item-meta{font-size:12px;color:var(--blue);margin-top:5px}
+.done .item-title{text-decoration:line-through;color:var(--muted)}
+.empty{padding:18px;background:var(--soft);border-radius:9px;color:var(--muted);text-align:center}
+.calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;max-width:570px;margin:16px auto}
+.weekday{text-align:center;font-size:10px;color:var(--muted);padding:8px 0}
+.day{height:40px;position:relative;background:var(--soft);padding:0}
+.day.selected{background:var(--yellow);font-weight:bold}
+.day.event{background:var(--pale);border-color:var(--yellow)}
+.day.event:after{content:"";position:absolute;width:6px;height:6px;border-radius:50%;background:#d3a400;bottom:3px;left:calc(50% - 3px)}
+.day.record{border-color:var(--blue)}
+.blank{visibility:hidden}
+.progress{height:7px;border-radius:10px;background:var(--line);overflow:hidden;margin:10px 0 18px}
+.progress-fill{height:100%;background:var(--yellow);width:0}
+.year-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.year-month{border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}
+.year-month-name{text-align:center;font-weight:bold;margin-bottom:10px}
+.year-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}
+.year-weekday{text-align:center;font-size:9px;color:var(--muted);padding:4px 0}
+.year-day{height:28px;padding:0;border:1px solid transparent;background:white;font-size:11px;border-radius:4px}
+.year-day.event{background:var(--yellow);font-weight:bold}
+.year-day.record{border-color:var(--blue)}
+.year-day.selected{outline:2px solid var(--blue);outline-offset:-2px}
+.year-blank{height:28px}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--muted);margin:16px 0}
+.swatch{display:inline-block;width:11px;height:11px;vertical-align:-1px;margin-right:5px;border-radius:3px}
+.week-grid{display:grid;grid-template-columns:repeat(7,minmax(105px,1fr));gap:7px;min-width:735px}
+.week-scroll{overflow-x:auto}
+.week-column{background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:8px}
+.week-heading{text-align:center;font-weight:bold;margin-bottom:10px}
+.lesson{background:white;border-left:3px solid var(--yellow);padding:8px;margin-bottom:8px;overflow-wrap:anywhere}
+.jar-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.jar{border:1px solid var(--line);border-radius:12px;padding:18px;text-align:center}
+.jar-art{height:125px;width:100px;margin:15px auto;border:4px solid #a1abb8;border-top-width:8px;border-radius:9px 9px 20px 20px;position:relative;overflow:hidden}
+.jar-liquid{position:absolute;bottom:0;left:0;right:0;height:0}
+.jar-percent{position:absolute;inset:0;display:grid;place-items:center;font-size:22px;font-weight:bold;text-shadow:0 1px 3px white}
+.notice{padding:12px;border:1px solid #f0dfa0;background:var(--pale);border-radius:9px;margin:12px 0}
+.footer{text-align:center;padding:25px;color:var(--muted);font-size:10px;letter-spacing:2px}
+@media(max-width:550px){
+ .app{padding:10px 8px}.panel{padding:13px}
+ .tab{font-size:12px;padding:9px}
+ .year-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+ .year-month{padding:7px 3px}
+ .year-month-name{font-size:10px;margin-bottom:6px}
+ .year-days{gap:0}
+ .year-weekday{font-size:7px}
+ .year-day,.year-blank{height:20px}
+ .year-day{font-size:8px;padding:0}
+ .item{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+<h1>MTC</h1>
+<div class="subtitle">MARTIAN TIME CALENDAR</div>
+</header>
+
+<nav class="tabs" id="tabs">
+<button class="tab active" data-page="calendar">Календарь</button>
+<button class="tab" data-page="goals">Цели</button>
+<button class="tab" data-page="meetings">Встречи</button>
+<button class="tab" data-page="schedule">Расписание</button>
+<button class="tab" data-page="jars">Банки целей</button>
+<button class="tab" data-page="important">Важные даты</button>
+<button class="tab" data-page="annual">Годовой календарь</button>
+</nav>
+
+<section class="page active" id="calendar">
+<div class="panel">
+<div class="label">MARTIAN CALENDAR</div>
+<div class="controls">
+<button id="monthPrev">←</button>
+<strong id="monthHeading"></strong>
+<button id="monthNext">→</button>
+</div>
+<select id="monthSelect"></select>
+<div class="calendar" id="monthGrid"></div>
+<p class="muted">Жёлтые даты — важные события. Синяя рамка — записи на день.</p>
+</div>
+<div class="panel">
+<div class="label">DAILY PLANNER</div>
+<h2 id="dayHeading"></h2>
+<div id="dayEvents"></div>
+<div class="muted" id="progressLabel"></div>
+<div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+<div class="form">
+<div class="field wide"><label>Задача</label><input id="taskName" placeholder="Название задачи"></div>
+<div class="field"><label>Начало</label><input id="taskStart" type="time" value="10:00"></div>
+<div class="field"><label>Окончание</label><input id="taskEnd" type="time" value="11:00"></div>
+<button class="primary wide" id="taskAdd">+ Добавить задачу</button>
+</div>
+<div id="taskList"></div>
+<h3 style="margin-top:22px">Заметки</h3>
+<textarea id="notes" placeholder="Записи на этот день..."></textarea>
+</div>
+</section>
+
+<section class="page" id="goals">
+<div class="panel">
+<div class="label">GOAL PLANNER</div>
+<h2>Мои цели</h2>
+<div class="form">
+<div class="field wide"><label>Цель</label><input id="goalName" placeholder="Название цели"></div>
+<div class="field"><label>Период</label><select id="goalPeriod"><option value="week">Неделя</option><option value="month">Месяц</option><option value="year">Год</option></select></div>
+<div class="field"><label>Банка</label><select id="goalJar"></select></div>
+<button class="primary wide" id="goalAdd">+ Добавить цель</button>
+</div>
+<div id="goalList"></div>
+</div>
+</section>
+
+<section class="page" id="meetings">
+<div class="panel">
+<div class="label">MEETING PLANNER</div>
+<h2>Встречи</h2>
+<div class="form">
+<div class="field wide"><label>Название</label><input id="meetingName" placeholder="Название встречи"></div>
+<div class="field"><label>Дата</label><input id="meetingDate" readonly></div>
+<div class="field"><label>Время</label><input id="meetingTime" type="time" value="12:00"></div>
+<button class="primary wide" id="meetingAdd">+ Добавить встречу</button>
+</div>
+<div id="meetingList"></div>
+</div>
+</section>
+
+<section class="page" id="schedule">
+<div class="panel">
+<div class="label">WEEKLY SCHEDULE</div>
+<h2>Расписание</h2>
+<div class="form">
+<div class="field wide"><label>Занятие</label><input id="lessonName" placeholder="Название занятия"></div>
+<div class="field wide"><label>День недели</label><select id="lessonDay"></select></div>
+<div class="field"><label>Начало</label><input id="lessonStart" type="time" value="09:00"></div>
+<div class="field"><label>Окончание</label><input id="lessonEnd" type="time" value="10:00"></div>
+<button class="primary wide" id="lessonAdd">+ Добавить занятие</button>
+</div>
+</div>
+<div class="panel"><div class="week-scroll"><div class="week-grid" id="weekGrid"></div></div></div>
+</section>
+
+<section class="page" id="jars">
+<div class="panel">
+<div class="label">GOAL JARS</div>
+<h2>Банки целей</h2>
+<div class="form">
+<div class="field wide"><label>Название банки</label><input id="jarName"></div>
+<div class="field"><label>Количество целей</label><input id="jarTarget" type="number" min="1" value="10"></div>
+<div class="field"><label>Цвет</label><input id="jarColor" type="color" value="#f5cc49"></div>
+<button class="primary wide" id="jarAdd">+ Создать банку</button>
+</div>
+</div>
+<div class="jar-grid" id="jarGrid"></div>
+</section>
+
+<section class="page" id="important">
+<div class="panel">
+<div class="label">IMPORTANT DATES</div>
+<h2>Важные даты</h2>
+<p class="muted">Здесь можно просмотреть, изменить или удалить сохранённые события.</p>
+<div id="importantList"></div>
+</div>
+</section>
+
+<section class="page" id="annual">
+<div class="panel">
+<div class="label">FULL MARTIAN YEAR · 687 SOLS</div>
+<h2>Годовой календарь</h2>
+<p class="muted">Все 23 месяца. Нажми на число, чтобы выбрать дату и добавить событие.</p>
+<div class="controls">
+<button id="yearPrev">←</button>
+<strong id="yearHeading"></strong>
+<button id="yearNext">→</button>
+</div>
+<div class="legend">
+<span><span class="swatch" style="background:#f5cc49"></span>Важная дата</span>
+<span><span class="swatch" style="border:2px solid #526b8d"></span>Записи</span>
+</div>
+<div class="year-grid" id="yearGrid"></div>
+</div>
+
+<div class="panel">
+<div class="label">SELECTED DATE</div>
+<h2 id="selectedHeading"></h2>
+<div id="selectedEvents"></div>
+<button id="openSelected">Открыть планы этого дня</button>
+</div>
+
+<div class="panel">
+<div class="label">IMPORTANT DATES</div>
+<h2 id="eventFormHeading">Добавить важную дату</h2>
+<div class="form">
+<div class="field wide"><label>Название события</label><input id="eventName" placeholder="Например: День рождения"></div>
+<div class="field"><label>Марсианский год</label><input id="eventYear" type="number" value="39"></div>
+<div class="field"><label>Месяц</label><select id="eventMonth"></select></div>
+<div class="field"><label>Соль</label><input id="eventDay" type="number" min="1" max="30" value="1"></div>
+<div class="field"><label>Повторение</label><select id="eventRepeat"><option value="yes">Каждый год</option><option value="no">Только один раз</option></select></div>
+<div class="field wide"><label>Описание</label><textarea id="eventDescription"></textarea></div>
+<button class="primary wide" id="eventSave">+ Сохранить событие</button>
+<button class="wide" id="eventCancel" hidden>Отменить редактирование</button>
+</div>
+</div>
+
+<div class="panel">
+<div class="label">ALL EVENTS</div>
+<h2>Все важные даты</h2>
+<div id="annualEventList"></div>
+</div>
+</section>
+
+<div class="footer">MTC SYSTEM · 687 SOLS</div>
+</div>
+
+<script>
+"use strict";
+
+const $=id=>document.getElementById(id);
+
+const months=[
+ ["Арен",30],["Велен",30],["Сорен",30],
+ ["Ларен",30],["Марен",30],["Тарен",30],
+ ["Норен",30],["Елен",30],["Корен",30],
+ ["Дарен",30],["Равен",30],["Мирен",30],
+ ["Солен",30],["Варен",30],["Ренен",30],
+ ["Кален",30],["Орлен",30],["Савен",30],
+ ["Терен",30],["Лорен",30],
+ ["Навен",29],["Зарен",29],["Фарен",29]
+];
+
+const weekdays=[
+ "Аури","Солир","Вери","Нари","Тери","Эли","Зари"
+];
+
+const STORAGE="MTC_COMPLETE_V6";
+const EVENT_STORAGE="MTC_IMPORTANT_DATES_V2";
+
+let state={
+ days:{},goals:[],meetings:[],lessons:[],
+ jars:[],importantDates:[]
+};
+
+let current={y:39,m:1,d:8};
+let annualYear=39;
+let selected={y:39,m:1,d:8};
+let editingId=null;
+
+function id(){
+ return "mtc_"+Date.now()+"_"+Math.random().toString(36).slice(2);
+}
+
+function load(){
+ try{
+  const old=JSON.parse(localStorage.getItem("MTC_CUSTOM_PLANNER_V5")||"null");
+  const saved=JSON.parse(localStorage.getItem(STORAGE)||"null");
+  const data=saved||old;
+  if(data)state={...state,...data};
+
+  for(const key of ["goals","meetings","lessons","jars","importantDates"]){
+   if(!Array.isArray(state[key]))state[key]=[];
+  }
+  if(!state.days||typeof state.days!=="object")state.days={};
+
+  const separate=localStorage.getItem(EVENT_STORAGE);
+  if(separate!==null){
+   const events=JSON.parse(separate);
+   if(Array.isArray(events))state.importantDates=events;
+  }
+
+  const used=new Set();
+  state.importantDates.forEach(e=>{
+   if(!e.id||used.has(String(e.id)))e.id=id();
+   used.add(String(e.id));
+  });
+ }catch(error){
+  console.error("Ошибка загрузки:",error);
+ }
+}
+
+function save(){
+ try{
+  localStorage.setItem(STORAGE,JSON.stringify(state));
+  localStorage.setItem(EVENT_STORAGE,JSON.stringify(state.importantDates));
+ }catch(error){
+  console.error(error);
+  alert("Не удалось сохранить данные.");
+ }
+}
+
+function key(y,m,d){
+ return `MY${y}-M${m+1}-D${d}`;
+}
+
+function dateText(y,m,d){
+ return `${d} ${months[m][0]} · MY ${y}`;
+}
+
+function weekday(y,m,d){
+ let n=(y-39)*687+d-1;
+ for(let i=0;i<m;i++)n+=months[i][1];
+ return ((n%7)+7)%7;
+}
+
+function record(y,m,d){
+ const k=key(y,m,d);
+ if(!state.days[k])state.days[k]={tasks:[],notes:""};
+ return state.days[k];
+}
+
+function hasRecord(y,m,d){
+ const r=state.days[key(y,m,d)];
+ return !!(r&&((r.tasks||[]).length||r.notes));
+}
+
+function matches(e,y,m,d){
+ if(!e||!e.date)return false;
+ const repeat=e.repeat===true||e.repeat==="yes";
+
+ if(e.type==="earth"){
+  if(typeof e.date!=="string")return false;
+  const parts=e.date.split("-").map(Number);
+  if(parts.length!==3)return false;
+  let serial=(y-39)*687+d-1;
+  for(let i=0;i<m;i++)serial+=months[i][1];
+  const earth=new Date(Date.UTC(2026,8,30)+serial*86400000);
+  return earth.getUTCMonth()+1===parts[1] &&
+   earth.getUTCDate()===parts[2] &&
+   (repeat||earth.getUTCFullYear()===parts[0]);
+ }
+
+ return Number(e.date.month)===m &&
+  Number(e.date.day)===d &&
+  (repeat||Number(e.date.year)===y);
+}
+
+function eventsAt(y,m,d){
+ return state.importantDates.filter(e=>matches(e,y,m,d));
+}
+
+function empty(parent,message){
+ const div=document.createElement("div");
+ div.className="empty";
+ div.textContent=message;
+ parent.append(div);
+}
+
+function item(title,meta,done,onCheck,onDelete){
+ const row=document.createElement("div");
+ row.className="item"+(done?" done":"");
+
+ if(onCheck){
+  const check=document.createElement("input");
+  check.type="checkbox";
+  check.checked=!!done;
+  check.onchange=()=>onCheck(check.checked);
+  row.append(check);
+ }
+
+ const body=document.createElement("div");
+ body.className="item-body";
+
+ const name=document.createElement("div");
+ name.className="item-title";
+ name.textContent=title;
+
+ const detail=document.createElement("div");
+ detail.className="item-meta";
+ detail.textContent=meta||"";
+
+ body.append(name,detail);
+ row.append(body);
+
+ const remove=document.createElement("button");
+ remove.type="button";
+ remove.className="danger";
+ remove.textContent="Удалить";
+ remove.onclick=onDelete;
+ row.append(remove);
+
+ return row;
+}
+
+function showPage(name){
+ document.querySelectorAll(".tab").forEach(b=>{
+  b.classList.toggle("active",b.dataset.page===name);
+ });
+ document.querySelectorAll(".page").forEach(p=>{
+  p.classList.toggle("active",p.id===name);
+ });
+ if(name==="annual")renderAnnual();
+}
+
+function renderMonth(){
+ $("monthHeading").textContent=
+  months[current.m][0]+" · MY "+current.y;
+ $("monthSelect").value=current.m;
+
+ const grid=$("monthGrid");
+ grid.replaceChildren();
+
+ weekdays.forEach(w=>{
+  const el=document.createElement("div");
+  el.className="weekday";
+  el.textContent=w;
+  grid.append(el);
+ });
+
+ for(let i=0;i<weekday(current.y,current.m,1);i++){
+  const el=document.createElement("div");
+  el.className="blank";
+  grid.append(el);
+ }
+
+ for(let d=1;d<=months[current.m][1];d++){
+  const b=document.createElement("button");
+  b.type="button";
+  b.className="day";
+  b.textContent=d;
+
+  if(eventsAt(current.y,current.m,d).length)
+   b.classList.add("event");
+
+  if(hasRecord(current.y,current.m,d))
+   b.classList.add("record");
+
+  if(current.d===d)b.classList.add("selected");
+
+  b.onclick=()=>{
+   current.d=d;
+   renderMonth();
+   renderTasks();
+  };
+
+  grid.append(b);
+ }
+}
+
+function changeMonth(delta){
+ current.m+=delta;
+ if(current.m>22){current.m=0;current.y++}
+ if(current.m<0){current.m=22;current.y--}
+ current.d=Math.min(current.d,months[current.m][1]);
+ renderAll();
+}
+
+function renderTasks(){
+ const {y,m,d}=current;
+ $("dayHeading").textContent=dateText(y,m,d);
+ $("meetingDate").value=dateText(y,m,d);
+
+ const eventBox=$("dayEvents");
+ eventBox.replaceChildren();
+
+ eventsAt(y,m,d).forEach(e=>{
+  const div=document.createElement("div");
+  div.className="notice";
+  div.textContent="★ "+e.title;
+  eventBox.append(div);
+ });
+
+ const r=record(y,m,d);
+ if(!Array.isArray(r.tasks))r.tasks=[];
+
+ $("notes").value=r.notes||"";
+
+ const list=$("taskList");
+ list.replaceChildren();
+
+ const tasks=[...r.tasks].sort(
+  (a,b)=>(a.start||"").localeCompare(b.start||"")
+ );
+
+ tasks.forEach(t=>{
+  list.append(item(
+   t.title,
+   (t.start||"")+" – "+(t.end||""),
+   t.done,
+   checked=>{
+    t.done=checked;
+    save();
+    renderTasks();
+  },
+  ()=>{
+   r.tasks=r.tasks.filter(x=>x!==t);
+   save();
+   renderAll();
+  }));
+ });
+
+ if(!tasks.length)empty(list,"Нет задач.");
+
+ const done=tasks.filter(t=>t.done).length;
+ $("progressLabel").textContent=`Выполнено: ${done} / ${tasks.length}`;
+ $("progressFill").style.width=
+  (tasks.length?done/tasks.length*100:0)+"%";
+}
+
+function renderGoals(){
+ const select=$("goalJar");
+ const previous=select.value;
+ select.replaceChildren();
+
+ const noJar=document.createElement("option");
+ noJar.value="";
+ noJar.textContent="Без банки";
+ select.append(noJar);
+
+ state.jars.forEach(j=>{
+  const o=document.createElement("option");
+  o.value=j.id;
+  o.textContent=j.name;
+  select.append(o);
+ });
+ select.value=state.jars.some(j=>j.id===previous)?previous:"";
+
+ const list=$("goalList");
+ list.replaceChildren();
+
+ const periods={week:"Неделя",month:"Месяц",year:"Год"};
+
+ state.goals.forEach(g=>{
+  const jar=state.jars.find(j=>j.id===g.jarId);
+  list.append(item(
+   g.title,
+   (periods[g.period]||g.period||"")+
+    (jar?" · "+jar.name:""),
+   g.done,
+   checked=>{
+    g.done=checked;
+    save();
+    renderGoals();
+    renderJars();
+   },
+   ()=>{
+    state.goals=state.goals.filter(x=>x!==g);
+    save();
+    renderAll();
+   }
+  ));
+ });
+
+ if(!state.goals.length)empty(list,"Пока нет целей.");
+}
+
+function renderMeetings(){
+ const list=$("meetingList");
+ list.replaceChildren();
+
+ state.meetings.forEach(m=>{
+  list.append(item(
+   m.title,
+   (m.date||"")+" · "+(m.time||""),
+   m.done,
+   checked=>{
+    m.done=checked;
+    save();
+    renderMeetings();
+   },
+   ()=>{
+    state.meetings=state.meetings.filter(x=>x!==m);
+    save();
+    renderMeetings();
+   }
+  ));
+ });
+
+ if(!state.meetings.length)empty(list,"Пока нет встреч.");
+}
+
+function renderSchedule(){
+ const grid=$("weekGrid");
+ grid.replaceChildren();
+
+ weekdays.forEach((name,index)=>{
+  const col=document.createElement("div");
+  col.className="week-column";
+
+  const title=document.createElement("div");
+  title.className="week-heading";
+  title.textContent=name;
+  col.append(title);
+
+  state.lessons
+   .filter(l=>Number(l.day)===index)
+   .sort((a,b)=>(a.start||"").localeCompare(b.start||""))
+   .forEach(l=>{
+    const box=document.createElement("div");
+    box.className="lesson";
+
+    const text=document.createElement("div");
+    text.textContent=l.title+" · "+l.start+"–"+l.end;
+
+    const remove=document.createElement("button");
+    remove.className="danger";
+    remove.textContent="Удалить";
+    remove.style.marginTop="8px";
+    remove.onclick=()=>{
+     state.lessons=state.lessons.filter(x=>x!==l);
+     save();
+     renderSchedule();
+    };
+
+    box.append(text,remove);
+    col.append(box);
+   });
+
+  grid.append(col);
+ });
+}
+
+function renderJars(){
+ const grid=$("jarGrid");
+ grid.replaceChildren();
+
+ if(!state.jars.length){
+  empty(grid,"Пока нет банок.");
+  return;
+ }
+
+ state.jars.forEach(j=>{
+  const count=state.goals.filter(
+   g=>g.jarId===j.id&&g.done
+  ).length;
+
+  const target=Math.max(1,Number(j.target)||1);
+  const percent=Math.min(100,Math.round(count/target*100));
+
+  const card=document.createElement("div");
+  card.className="jar";
+
+  const name=document.createElement("h3");
+  name.textContent=j.name;
+
+  const art=document.createElement("div");
+  art.className="jar-art";
+
+  const liquid=document.createElement("div");
+  liquid.className="jar-liquid";
+  liquid.style.height=percent+"%";
+  liquid.style.background=j.color||"#f5cc49";
+
+  const number=document.createElement("div");
+  number.className="jar-percent";
+  number.textContent=percent+"%";
+
+  art.append(liquid,number);
+
+  const info=document.createElement("p");
+  info.textContent=count+" / "+target+" целей";
+
+  const remove=document.createElement("button");
+  remove.className="danger";
+  remove.textContent="Удалить банку";
+  remove.onclick=()=>{
+   state.jars=state.jars.filter(x=>x!==j);
+   state.goals.forEach(g=>{
+    if(g.jarId===j.id)g.jarId="";
+   });
+   save();
+   renderAll();
+  };
+
+  card.append(name,art,info,remove);
+  grid.append(card);
+ });
+}
+
+// ВАЖНЫЕ ДАТЫ — ОБЩИЕ ДЛЯ ВСЕГО MTC
+
+function eventDate(e){
+ if(e.type==="earth")return "Земная дата: "+e.date;
+ if(!e.date||typeof e.date!=="object")return "";
+ const m=Number(e.date.month);
+ return e.date.day+" "+(months[m]?.[0]||"")+
+  " · MY "+e.date.year;
+}
+
+function eventCard(e){
+ const row=document.createElement("div");
+ row.className="item";
+
+ const body=document.createElement("div");
+ body.className="item-body";
+
+ const title=document.createElement("div");
+ title.className="item-title";
+ title.textContent=e.title||"Событие";
+
+ const meta=document.createElement("div");
+ meta.className="item-meta";
+ meta.textContent=eventDate(e)+
+  (e.repeat===true||e.repeat==="yes"?" · Каждый год":"");
+
+ body.append(title,meta);
+
+ if(e.description){
+  const p=document.createElement("p");
+  p.className="muted";
+  p.textContent=e.description;
+  body.append(p);
+ }
+
+ const edit=document.createElement("button");
+ edit.type="button";
+ edit.textContent="Изменить";
+ edit.onclick=()=>editEvent(e.id);
+
+ const remove=document.createElement("button");
+ remove.type="button";
+ remove.className="danger";
+ remove.textContent="Удалить";
+
+ // Удаление без confirm и без старых обработчиков.
+ remove.onclick=()=>{
+  const index=state.importantDates.findIndex(
+   x=>String(x.id)===String(e.id)
+  );
+  if(index<0)return;
+
+  state.importantDates.splice(index,1);
+
+  if(String(editingId)===String(e.id))
+   resetEventForm();
+
+  save();
+  renderAll();
+ };
+
+ row.append(body,edit,remove);
+ return row;
+}
+
+function renderEventLists(){
+ for(const target of ["importantList","annualEventList"]){
+  const list=$(target);
+  list.replaceChildren();
+
+  if(!state.importantDates.length){
+   empty(list,"Пока нет важных дат.");
+  }else{
+   state.importantDates.forEach(e=>list.append(eventCard(e)));
+  }
+ }
+}
+
+function renderAnnual(){
+ $("yearHeading").textContent="MY "+annualYear;
+
+ const grid=$("yearGrid");
+ grid.replaceChildren();
+
+ months.forEach(([name,length],m)=>{
+  const card=document.createElement("div");
+  card.className="year-month";
+
+  const heading=document.createElement("div");
+  heading.className="year-month-name";
+  heading.textContent=name;
+
+  const days=document.createElement("div");
+  days.className="year-days";
+
+  weekdays.forEach(w=>{
+   const label=document.createElement("div");
+   label.className="year-weekday";
+   label.textContent=w.slice(0,2);
+   days.append(label);
+  });
+
+  const offset=weekday(annualYear,m,1);
+  for(let i=0;i<offset;i++){
+   const blank=document.createElement("div");
+   blank.className="year-blank";
+   days.append(blank);
+  }
+
+  for(let d=1;d<=length;d++){
+   const b=document.createElement("button");
+   b.type="button";
+   b.className="year-day";
+   b.textContent=d;
+
+   const events=eventsAt(annualYear,m,d);
+
+   if(events.length){
+    b.classList.add("event");
+    b.title=events.map(e=>e.title).join(", ");
+   }
+
+   if(hasRecord(annualYear,m,d))
+    b.classList.add("record");
+
+   if(selected.y===annualYear &&
+      selected.m===m &&
+      selected.d===d)
+    b.classList.add("selected");
+
+   b.onclick=()=>{
+    selected={y:annualYear,m,d};
+    $("eventYear").value=annualYear;
+    $("eventMonth").value=m;
+    $("eventDay").value=d;
+    renderAnnual();
+   };
+
+   days.append(b);
+  }
+
+  card.append(heading,days);
+  grid.append(card);
+ });
+
+ $("selectedHeading").textContent=
+  dateText(selected.y,selected.m,selected.d);
+
+ const box=$("selectedEvents");
+ box.replaceChildren();
+
+ const found=eventsAt(selected.y,selected.m,selected.d);
+ if(!found.length)empty(box,"На эту дату событий нет.");
+ else found.forEach(e=>box.append(eventCard(e)));
+}
+
+function resetEventForm(){
+ editingId=null;
+ $("eventName").value="";
+ $("eventDescription").value="";
+ $("eventRepeat").value="yes";
+ $("eventFormHeading").textContent="Добавить важную дату";
+ $("eventSave").textContent="+ Сохранить событие";
+ $("eventCancel").hidden=true;
+}
+
+function editEvent(eventId){
+ const e=state.importantDates.find(
+  x=>String(x.id)===String(eventId)
+ );
+ if(!e)return;
+
+ if(e.type==="earth"){
+  alert("Для этой старой земной записи создайте новую марсианскую дату.");
+  return;
+ }
+
+ editingId=e.id;
+ $("eventName").value=e.title||"";
+ $("eventDescription").value=e.description||"";
+ $("eventYear").value=e.date.year;
+ $("eventMonth").value=e.date.month;
+ $("eventDay").value=e.date.day;
+ $("eventRepeat").value=e.repeat?"yes":"no";
+
+ $("eventFormHeading").textContent="Изменить важную дату";
+ $("eventSave").textContent="Сохранить изменения";
+ $("eventCancel").hidden=false;
+
+ annualYear=Number(e.date.year);
+ selected={
+  y:annualYear,
+  m:Number(e.date.month),
+  d:Number(e.date.day)
+ };
+
+ showPage("annual");
+ $("eventName").focus();
+}
+
+function saveEvent(){
+ const title=$("eventName").value.trim();
+ const y=Number($("eventYear").value);
+ const m=Number($("eventMonth").value);
+ const d=Number($("eventDay").value);
+
+ if(!title){
+  alert("Введите название события.");
+  return;
+ }
+
+ if(!Number.isInteger(y) ||
+    !Number.isInteger(m) ||
+    m<0||m>=months.length ||
+    !Number.isInteger(d) ||
+    d<1||d>months[m][1]){
+  alert("Укажите правильную марсианскую дату.");
+  return;
+ }
+
+ const e={
+  id:editingId||id(),
+  title,
+  description:$("eventDescription").value.trim(),
+  type:"mars",
+  date:{year:y,month:m,day:d},
+  repeat:$("eventRepeat").value==="yes"
+ };
+
+ if(editingId){
+  const index=state.importantDates.findIndex(
+   x=>String(x.id)===String(editingId)
+  );
+  if(index>=0)state.importantDates[index]=e;
+  else state.importantDates.push(e);
+ }else{
+  state.importantDates.push(e);
+ }
+
+ annualYear=y;
+ selected={y,m,d};
+ save();
+ resetEventForm();
+ renderAll();
+}
+
+// КНОПКИ
+
+document.querySelectorAll(".tab").forEach(b=>{
+ b.onclick=()=>showPage(b.dataset.page);
+});
+
+$("monthPrev").onclick=()=>changeMonth(-1);
+$("monthNext").onclick=()=>changeMonth(1);
+
+$("monthSelect").onchange=()=>{
+ current.m=Number($("monthSelect").value);
+ current.d=Math.min(current.d,months[current.m][1]);
+ renderAll();
+};
+
+$("yearPrev").onclick=()=>{
+ annualYear--;
+ renderAnnual();
+};
+$("yearNext").onclick=()=>{
+ annualYear++;
+ renderAnnual();
+};
+
+$("openSelected").onclick=()=>{
+ current={...selected};
+ renderAll();
+ showPage("calendar");
+};
+
+$("taskAdd").onclick=()=>{
+ const title=$("taskName").value.trim();
+ if(!title)return alert("Введите название задачи.");
+
+ record(current.y,current.m,current.d).tasks.push({
+  id:id(),title,
+  start:$("taskStart").value,
+  end:$("taskEnd").value,
+  done:false
+ });
+
+ $("taskName").value="";
+ save();
+ renderAll();
+};
+
+$("notes").oninput=()=>{
+ record(current.y,current.m,current.d).notes=$("notes").value;
+ save();
+};
+
+$("goalAdd").onclick=()=>{
+ const title=$("goalName").value.trim();
+ if(!title)return alert("Введите цель.");
+
+ state.goals.push({
+  id:id(),title,
+  period:$("goalPeriod").value,
+  jarId:$("goalJar").value,
+  done:false
+ });
+
+ $("goalName").value="";
+ save();
+ renderAll();
+};
+
+$("meetingAdd").onclick=()=>{
+ const title=$("meetingName").value.trim();
+ if(!title)return alert("Введите название встречи.");
+
+ state.meetings.push({
+  id:id(),title,
+  date:dateText(current.y,current.m,current.d),
+  time:$("meetingTime").value,
+  done:false
+ });
+
+ $("meetingName").value="";
+ save();
+ renderAll();
+};
+
+$("lessonAdd").onclick=()=>{
+ const title=$("lessonName").value.trim();
+ if(!title)return alert("Введите название занятия.");
+
+ state.lessons.push({
+  id:id(),title,
+  day:Number($("lessonDay").value),
+  start:$("lessonStart").value,
+  end:$("lessonEnd").value
+ });
+
+ $("lessonName").value="";
+ save();
+ renderAll();
+};
+
+$("jarAdd").onclick=()=>{
+ const name=$("jarName").value.trim();
+ const target=Number($("jarTarget").value);
+
+ if(!name||!Number.isInteger(target)||target<1)
+  return alert("Введите название и количество целей.");
+
+ state.jars.push({
+  id:id(),name,target,color:$("jarColor").value
+ });
+
+ $("jarName").value="";
+ save();
+ renderAll();
+};
+
+$("eventSave").onclick=saveEvent;
+$("eventCancel").onclick=resetEventForm;
+
+// СПИСКИ
+
+months.forEach(([name],i)=>{
+ for(const target of ["monthSelect","eventMonth"]){
+  const option=document.createElement("option");
+  option.value=i;
+  option.textContent=name;
+  $(target).append(option);
+ }
+});
+
+weekdays.forEach((name,i)=>{
+ const option=document.createElement("option");
+ option.value=i;
+ option.textContent=name;
+ $("lessonDay").append(option);
+});
+
+// ЗАПУСК
+
+function renderAll(){
+ renderMonth();
+ renderTasks();
+ renderGoals();
+ renderMeetings();
+ renderSchedule();
+ renderJars();
+ renderEventLists();
+ renderAnnual();
+}
+
+load();
+
+$("eventYear").value=selected.y;
+$("eventMonth").value=selected.m;
+$("eventDay").value=selected.d;
+
+renderAll();
+</script>
+</body>
+</html>
